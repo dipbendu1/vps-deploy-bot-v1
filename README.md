@@ -69,6 +69,6 @@ sudo systemctl restart bot
 Multiple main admins are stored in the database (seeded from ``MAIN_ADMIN_ID``), so changes made with ``!add-admin/!rm-admin`` persist across restarts.
 
 # Notes
-The bot runs as **root** because it directly manages LXC containers via lxc/lxd — keep the bot token and server access secured.
-``vps.db`` (SQLite) is created automatically in /root on first run and stores nodes, VPS records, admins, and settings.
-Run ``!help`` in Discord after the bot is online to see the full command list.
+- The bot runs as **root** because it directly manages LXC containers via lxc/lxd — keep the bot token and server access secured.
+- ``vps.db`` (SQLite) is created automatically in /root on first run and stores nodes, VPS records, admins, and settings.
+- Run ``!help`` in Discord after the bot is online to see the full command list.
