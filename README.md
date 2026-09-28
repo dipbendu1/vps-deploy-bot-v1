@@ -24,13 +24,14 @@ Fully automated Discord bot for managing LXC/LXD-based VPS containers — creati
 
 > If you're not using GitHub, just place bot.py and install.sh in the same folder on your > server and run ``sudo ./install.sh directly.``
 
-The script will:
+# The script will:
 
-Install and initialize LXD/LXC
-Install Python 3, pip, and required packages (discord.py, requests)
-Copy bot.py to /root/bot.py
-Create and enable a bot.service systemd unit so the bot runs 24/7 and restarts on failure or reboot
-Managing the Bot
+- Install and initialize LXD/LXC
+- Install Python 3, pip, and required packages (``discord.py``, ``requests``)
+- Copy ``bot.py`` to ``/root/bot.py``
+- Create and enable a bot.service systemd unit so the bot runs 24/7 and restarts on failure or reboot
+- 
+# - Managing the Bot
 Action	Command
 Check status	systemctl status bot
 View live logs	journalctl -u bot -f
