@@ -32,13 +32,14 @@ Fully automated Discord bot for managing LXC/LXD-based VPS containers — creati
 - Create and enable a bot.service systemd unit so the bot runs 24/7 and restarts on failure or reboot
  
 # - Managing the Bot
-``Action``	        ``Command``
-Check status	      ``systemctl status bot``
-View live logs	    ``journalctl -u bot -f``
-Restart	           ``sudo systemctl restart bot``
-Stop	              ``sudo systemctl stop bot``
-Disable autostart	 ``sudo systemctl disable bot``
 
+| Action | Command |
+| --- | --- |
+| Check status | `systemctl status bot` |
+| View live logs | `journalctl -u bot -f` |
+| Restart | `sudo systemctl restart bot` |
+| Stop | `sudo systemctl stop bot` |
+| Disable autostart | `sudo systemctl disable bot` |
 # Configuration
 
 Environment variables are set directly in /etc/systemd/system/bot.service. After editing that file, apply changes with:
