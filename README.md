@@ -40,13 +40,15 @@ Fully automated Discord bot for managing LXC/LXD-based VPS containers — creati
 | Restart | `sudo systemctl restart bot` |
 | Stop | `sudo systemctl stop bot` |
 | Disable autostart | `sudo systemctl disable bot` |
+
 # Configuration
 
 Environment variables are set directly in /etc/systemd/system/bot.service. After editing that file, apply changes with:
-
+```
 sudo systemctl daemon-reload
 sudo systemctl restart bot
-Key variables:
+```
+**Key variables:**
 
 Variable	Description	Default
 DISCORD_TOKEN	Your bot's token	— (required)
