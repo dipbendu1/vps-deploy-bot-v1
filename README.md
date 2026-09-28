@@ -1,15 +1,16 @@
-Evil Vps V1 Bot — LXC Edition
-Made by EVILSAAD Repo: https://github.com/evilsaad0-hash/vps-deploy-bot-v1.git
+# DB Vps V1 Bot — LXC Edition
+Made by **DB GAMING** Repo: https://github.com/dipbendu1/vps-deploy-bot-v1.git
 
 Fully automated Discord bot for managing LXC/LXD-based VPS containers — creation, resizing, suspension, port forwarding, multi-node support, and admin controls, all from Discord.
 
-Requirements
-A fresh Ubuntu or Debian server (root access)
-A Discord Bot Token (Discord Developer Portal)
-Your Discord User ID (main admin)
-git installed (sudo apt install git -y if missing)
+# Requirements
+- A fresh Ubuntu or Debian server (root access)
+- A Discord Bot Token (Discord Developer Portal)
+- Your Discord User ID (main admin)
+- **git** installed **(sudo apt install git -y** if missing)
+
 Installation (from GitHub)
-Clone the repo and run the installer as root:
+- Clone the repo and run the installer as root:
 
 git clone https://github.com/evilsaad0-hash/vps-deploy-bot-v1.git
 cd vps-deploy-bot-v1
