@@ -436,19 +436,18 @@ def truncate_text(text, max_length=1024):
         return text
     return text[:max_length-3] + "..."
 
-# Naya (Updated with MineCloud image URL):
+# Embed Creator with Fixed MineCloud Image String
 def create_embed(title, description="", color=0x1a1a1a):
     embed = discord.Embed(
         title=truncate_text(f"🚀 {BOT_NAME} - {title}", 256),
         description=truncate_text(description, 4096),
         color=color
     )
-    # MineCloud image URL paste karein
     minecloud_img_url = "https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640"
     
-    embed.set_thumbnail(https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640)
+    embed.set_thumbnail(url=minecloud_img_url)
     embed.set_footer(text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                     icon_url=https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640)
+                     icon_url=minecloud_img_url)
     return embed
 
 def add_field(embed, name, value, inline=False):
@@ -641,9 +640,6 @@ async def setup_ssh_access(container_name: str, node_id: int) -> str:
             logger.warning(f"SSH setup command failed in {container_name}: {cmd} - {cmd_error}")
     return password
 
-# ---------------------------------------------------------------------------
-# Pinggy.io SSH tunnel system
-# ---------------------------------------------------------------------------
 PINGGY_LOG_PATH = "/root/.pinggy_tunnel.log"
 
 def parse_pinggy_address(log_text: str) -> Optional[str]:
@@ -705,7 +701,6 @@ async def establish_pinggy_tunnel(container_name: str, node_id: int, retries: in
     logger.warning(f"Pinggy: no tunnel address found for {container_name} after {retries} attempts")
     return None
 
-# Get or create VPS role
 async def get_or_create_vps_role(guild):
     global VPS_USER_ROLE_ID
 
@@ -748,7 +743,6 @@ async def get_or_create_vps_role(guild):
         logger.error(f"Failed to create VPS role: {e}")
         return None
 
-# Host resource functions
 def get_host_cpu_usage():
     try:
         if shutil.which("mpstat"):
@@ -1113,7 +1107,7 @@ async def my_vps(ctx):
         vps_cards.append(
             f"**{i}.** `{vps['container_name']}`\n"
             f"{status} • `{config}`\n"
-            f"⚙️ `{ram}` RAM • `{cpu}` CPU • `{storage}` Disk\n"
+            f"⚙️️ `{ram}` RAM • `{cpu}` CPU • `{storage}` Disk\n"
             f"📍 Node: `{node_name}`"
         )
 
@@ -1445,7 +1439,7 @@ class ManageView(discord.ui.View):
         stop_button = discord.ui.Button(label="⏸ Stop", style=discord.ButtonStyle.secondary)
         stop_button.callback = lambda inter: self.action_callback(inter, 'stop')
         ssh_button = discord.ui.Button(label="🔑 SSH", style=discord.ButtonStyle.primary)
-        ssh_button.callback = lambda inter: self.action_callback(inter, 'tmate')
+        ssh_button.callback = lambda inter: self.action_callback(inter, 'ssh')
         stats_button = discord.ui.Button(label="📊 Stats", style=discord.ButtonStyle.secondary)
         stats_button.callback = lambda inter: self.action_callback(inter, 'stats')
         self.add_item(start_button)
@@ -1471,6 +1465,7 @@ class ManageView(discord.ui.View):
         node_id = target_vps['node_id']
         
         await interaction.response.defer(ephemeral=True)
+        
         if action == 'start':
             try:
                 await safe_start_container(container_name, node_id)
@@ -1479,6 +1474,7 @@ class ManageView(discord.ui.View):
                 await interaction.followup.send(embed=create_success_embed("VPS Started", f"VPS `{container_name}` is running!"), ephemeral=True)
             except Exception as e:
                 await interaction.followup.send(embed=create_error_embed("Start Failed", str(e)), ephemeral=True)
+                
         elif action == 'stop':
             try:
                 await execute_lxc(container_name, f"stop {container_name}", timeout=120, node_id=node_id)
@@ -1487,6 +1483,44 @@ class ManageView(discord.ui.View):
                 await interaction.followup.send(embed=create_success_embed("VPS Stopped", f"VPS `{container_name}` stopped!"), ephemeral=True)
             except Exception as e:
                 await interaction.followup.send(embed=create_error_embed("Stop Failed", str(e)), ephemeral=True)
+                
+        elif action == 'ssh':
+            pinggy_address = target_vps.get('pinggy_address')
+            root_pass = target_vps.get('root_password', 'Not set')
+            embed = create_info_embed(f"🔑 SSH Login Details - `{container_name}`")
+            if pinggy_address:
+                tunnel_host, tunnel_port = pinggy_address.split(":")
+                add_field(embed, "Host", f"`{tunnel_host}`", True)
+                add_field(embed, "Port", f"`{tunnel_port}`", True)
+                add_field(embed, "User", "`root`", True)
+                add_field(embed, "Password", f"`{root_pass}`", False)
+                add_field(embed, "Command", f"```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+            else:
+                add_field(embed, "Password", f"`{root_pass}`", False)
+                add_field(embed, "Tunnel Info", "No active SSH tunnel found. Trying to establish one...", False)
+                new_address = await establish_pinggy_tunnel(container_name, node_id)
+                if new_address:
+                    target_vps['pinggy_address'] = new_address
+                    save_vps_data()
+                    tunnel_host, tunnel_port = new_address.split(":")
+                    add_field(embed, "New Host", f"`{tunnel_host}`", True)
+                    add_field(embed, "New Port", f"`{tunnel_port}`", True)
+                    add_field(embed, "Command", f"```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+        elif action == 'stats':
+            try:
+                stats = await get_container_stats(container_name, node_id)
+                embed = create_info_embed(f"📊 Live Container Stats - `{container_name}`")
+                add_field(embed, "Status", f"`{stats['status'].upper()}`", True)
+                add_field(embed, "CPU Usage", f"`{stats['cpu']:.1f}%`", True)
+                ram_str = f"{stats['ram']['used']}/{stats['ram']['total']} MB ({stats['ram']['pct']:.1f}%)" if isinstance(stats['ram'], dict) else str(stats['ram'])
+                add_field(embed, "RAM Usage", f"`{ram_str}`", True)
+                add_field(embed, "Disk Usage", f"`{stats['disk']}`", True)
+                add_field(embed, "Uptime", f"`{stats['uptime']}`", False)
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            except Exception as e:
+                await interaction.followup.send(embed=create_error_embed("Stats Error", str(e)), ephemeral=True)
 
 @bot.command(name='manage')
 async def manage_vps(ctx, user: discord.Member = None):
