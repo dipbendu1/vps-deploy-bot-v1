@@ -699,7 +699,7 @@ class ManageView(discord.ui.View):
         stats_button.callback = lambda inter: self.action_callback(inter, 'stats')
         
         # New Delete Button Added
-        delete_button = discord.ui.Button(label="🗑️ Delete VPS", style=discord.ButtonStyle.danger)
+        delete_button = discord.ui.Button(label="🗑️️ Delete VPS", style=discord.ButtonStyle.danger)
         delete_button.callback = lambda inter: self.action_callback(inter, 'delete')
 
         self.add_item(start_button)
