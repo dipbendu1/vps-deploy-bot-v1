@@ -1107,7 +1107,7 @@ async def my_vps(ctx):
         vps_cards.append(
             f"**{i}.** `{vps['container_name']}`\n"
             f"{status} • `{config}`\n"
-            f"⚙️️ `{ram}` RAM • `{cpu}` CPU • `{storage}` Disk\n"
+            f"⚙ `{ram}` RAM • `{cpu}` CPU • `{storage}` Disk\n"
             f"📍 Node: `{node_name}`"
         )
 
@@ -1265,10 +1265,10 @@ class OSSelectView(discord.ui.View):
             add_field(dm_embed, "VPS Details", f"**VPS ID:** #{vps_count}\n**Container Name:** `{container_name}`\n**Configuration:** {config_str}\n**Status:** Running\n**OS:** {os_version}\n**Created:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", False)
             if pinggy_address:
                 tunnel_host, tunnel_port = pinggy_address.split(":")
-                add_field(dm_embed, "🔑 SSH Login", f"**Host:** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n**User:** `root`\n**Password:** `{root_password}`\n\n```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+                add_field(dm_embed, "🔑 PuTTY SSH Connection Details", f"**Host Name (or IP address):** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n**Saved Session Name:** `VPS-{vps_count}`\n**User:** `root`\n**Password:** `{root_password}`\n\n```putty.exe -ssh root@{tunnel_host} -P {tunnel_port} -pw {root_password}```", False)
             else:
                 add_field(dm_embed, "🔑 Root Password", f"`{root_password}`\n⚠️ SSH tunnel setup failed — use `{PREFIX}manage` → 🔌 Reconnect Tunnel to try again.", False)
-            add_field(dm_embed, "Management", f"• Use `{PREFIX}manage` to start/stop/reinstall your VPS\n• Use `{PREFIX}manage` → SSH for terminal access\n• Contact admin for upgrades or issues", False)
+            add_field(dm_embed, "Management", f"• Use `{PREFIX}manage` to start/stop/reinstall your VPS\n• Use `{PREFIX}manage` → PuTTY SSH for terminal access\n• Contact admin for upgrades or issues", False)
             try:
                 await self.user.send(embed=dm_embed)
             except discord.Forbidden:
@@ -1345,7 +1345,7 @@ class ReinstallOSSelectView(discord.ui.View):
                 dm_embed = create_success_embed("VPS Reinstalled!", f"Your VPS `{self.container_name}` was reinstalled with a new OS.")
                 if pinggy_address:
                     tunnel_host, tunnel_port = pinggy_address.split(":")
-                    add_field(dm_embed, "🔑 SSH Login", f"**Host:** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n**User:** `root`\n**Password:** `{root_password}`\n\n```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+                    add_field(dm_embed, "🔑 PuTTY SSH Connection Details", f"**Host Name (or IP address):** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n**User:** `root`\n**Password:** `{root_password}`\n\n```putty.exe -ssh root@{tunnel_host} -P {tunnel_port} -pw {root_password}```", False)
                 await owner_user.send(embed=dm_embed)
             except Exception:
                 pass
@@ -1430,7 +1430,7 @@ class ManageView(discord.ui.View):
         pinggy_address = vps.get('pinggy_address')
         if pinggy_address:
             tunnel_host, tunnel_port = pinggy_address.split(":")
-            add_field(embed, "🔌 SSH Tunnel", f"**Host:** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+            add_field(embed, "🔌 PuTTY SSH Tunnel", f"**Host:** `{tunnel_host}`\n**Port:** `{tunnel_port}`\n```putty.exe -ssh root@{tunnel_host} -P {tunnel_port}```", False)
         return embed
 
     def add_action_buttons(self):
@@ -1438,13 +1438,13 @@ class ManageView(discord.ui.View):
         start_button.callback = lambda inter: self.action_callback(inter, 'start')
         stop_button = discord.ui.Button(label="⏸ Stop", style=discord.ButtonStyle.secondary)
         stop_button.callback = lambda inter: self.action_callback(inter, 'stop')
-        ssh_button = discord.ui.Button(label="🔑 SSH", style=discord.ButtonStyle.primary)
-        ssh_button.callback = lambda inter: self.action_callback(inter, 'ssh')
+        putty_button = discord.ui.Button(label="💻 PuTTY SSH", style=discord.ButtonStyle.primary)
+        putty_button.callback = lambda inter: self.action_callback(inter, 'putty')
         stats_button = discord.ui.Button(label="📊 Stats", style=discord.ButtonStyle.secondary)
         stats_button.callback = lambda inter: self.action_callback(inter, 'stats')
         self.add_item(start_button)
         self.add_item(stop_button)
-        self.add_item(ssh_button)
+        self.add_item(putty_button)
         self.add_item(stats_button)
 
     async def select_vps(self, interaction: discord.Interaction):
@@ -1484,17 +1484,18 @@ class ManageView(discord.ui.View):
             except Exception as e:
                 await interaction.followup.send(embed=create_error_embed("Stop Failed", str(e)), ephemeral=True)
                 
-        elif action == 'ssh':
+        elif action == 'putty':
             pinggy_address = target_vps.get('pinggy_address')
             root_pass = target_vps.get('root_password', 'Not set')
-            embed = create_info_embed(f"🔑 SSH Login Details - `{container_name}`")
+            embed = create_info_embed(f"💻 PuTTY SSH Connection Info - `{container_name}`")
             if pinggy_address:
                 tunnel_host, tunnel_port = pinggy_address.split(":")
-                add_field(embed, "Host", f"`{tunnel_host}`", True)
+                add_field(embed, "Host Name (or IP address)", f"`{tunnel_host}`", True)
                 add_field(embed, "Port", f"`{tunnel_port}`", True)
-                add_field(embed, "User", "`root`", True)
-                add_field(embed, "Password", f"`{root_pass}`", False)
-                add_field(embed, "Command", f"```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+                add_field(embed, "Connection Type", "`SSH`", True)
+                add_field(embed, "Username", "`root`", True)
+                add_field(embed, "Password", f"`{root_pass}`", True)
+                add_field(embed, "PuTTY CLI Command", f"```putty.exe -ssh root@{tunnel_host} -P {tunnel_port} -pw {root_pass}```", False)
             else:
                 add_field(embed, "Password", f"`{root_pass}`", False)
                 add_field(embed, "Tunnel Info", "No active SSH tunnel found. Trying to establish one...", False)
@@ -1503,9 +1504,9 @@ class ManageView(discord.ui.View):
                     target_vps['pinggy_address'] = new_address
                     save_vps_data()
                     tunnel_host, tunnel_port = new_address.split(":")
-                    add_field(embed, "New Host", f"`{tunnel_host}`", True)
-                    add_field(embed, "New Port", f"`{tunnel_port}`", True)
-                    add_field(embed, "Command", f"```ssh root@{tunnel_host} -p {tunnel_port}```", False)
+                    add_field(embed, "Host Name (or IP address)", f"`{tunnel_host}`", True)
+                    add_field(embed, "Port", f"`{tunnel_port}`", True)
+                    add_field(embed, "PuTTY CLI Command", f"```putty.exe -ssh root@{tunnel_host} -P {tunnel_port} -pw {root_pass}```", False)
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         elif action == 'stats':
