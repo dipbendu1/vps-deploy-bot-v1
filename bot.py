@@ -443,12 +443,12 @@ def create_embed(title, description="", color=0x1a1a1a):
         description=truncate_text(description, 4096),
         color=color
     )
-    MY_IMAGE_URL = "https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640"
+    MY_IMAGE (URL="https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640&")"
 
        embed.set_thumbnail(https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640)
        embed.set_footer(
        text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-       icon_url=https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640
+       icon_url=https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640&")
     )
 return embed
 
