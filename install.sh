@@ -163,7 +163,7 @@ RestartSec=5
 Environment=PYTHONUNBUFFERED=1
 Environment=DISCORD_TOKEN=${DISCORD_TOKEN}
 Environment=MAIN_ADMIN_ID=${MAIN_ADMIN_ID}
-Environment=BOT_NAME=Svm-v9
+Environment=BOT_NAME=DB-v2
 
 [Install]
 WantedBy=multi-user.target
