@@ -24,6 +24,9 @@ BOT_NAME = os.getenv('BOT_NAME', 'DB-v1')
 PREFIX = os.getenv('PREFIX', '!')
 YOUR_SERVER_IP = os.getenv('YOUR_SERVER_IP', '127.0.0.1')
 
+# Image URL constant
+AVATAR_URL = "https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640"
+
 # ---- Public IP detection (used for SSH login info shown to users) ----
 _cached_public_ip = None
 
@@ -443,9 +446,9 @@ def create_embed(title, description="", color=0x1a1a1a):
         description=truncate_text(description, 4096),
         color=color
     )
-    embed.set_thumbnail(https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640")
+    embed.set_thumbnail(url=AVATAR_URL)
     embed.set_footer(text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                     icon_url="https://cdn.discordapp.com/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640")
+                     icon_url=AVATAR_URL)
     return embed
 
 def add_field(embed, name, value, inline=False):
