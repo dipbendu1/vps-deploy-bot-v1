@@ -20,7 +20,7 @@ import re
 
 # Load environment variables
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN', '')
-BOT_NAME = os.getenv('BOT_NAME', 'EVIL-v1')
+BOT_NAME = os.getenv('BOT_NAME', 'DB-v1')
 PREFIX = os.getenv('PREFIX', '!')
 YOUR_SERVER_IP = os.getenv('YOUR_SERVER_IP', '127.0.0.1')
 
@@ -439,13 +439,13 @@ def truncate_text(text, max_length=1024):
 # Embed creation functions
 def create_embed(title, description="", color=0x1a1a1a):
     embed = discord.Embed(
-        title=truncate_text(f"🌟 {BOT_NAME} - {title}", 256),
+        title=truncate_text(f"🚀 {BOT_NAME} - {title}", 256),
         description=truncate_text(description, 4096),
         color=color
     )
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1551851022459346995/1551854053431181342/file_0000000012e482089bbcb6baf6541790.png?ex=6ab37c36&is=6ab22ab6&hm=befd08e6f0d32dc78d13de9f687071e0baafc9fe46c449b9dea196dc5a2214d2&")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640")
     embed.set_footer(text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                     icon_url="https://cdn.discordapp.com/attachments/1551851022459346995/1551854054181707846/file_00000000d0208211a03e73df9a707fcb.png?ex=6ab37c36&is=6ab22ab6&hm=b1008fc48b2f4a57e89cdab46d804fcc53f53296e5a3f3401b94b5fff5ca0373&")
+                     icon_url="https://media.discordapp.net/attachments/1554370796506320917/1554370864517091328/ChatGPT_Image_Jul_4_2026_11_08_41_AM.png?backend=b2&ex=6abca42c&is=6abb52ac&hm=9596d584cc9ec064d73f50ea260518aea799a0be5885244bc925c0684004abdc&=&format=webp&quality=lossless&width=640&height=640")
     return embed
 
 def add_field(embed, name, value, inline=False):
