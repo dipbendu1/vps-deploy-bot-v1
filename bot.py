@@ -45,7 +45,7 @@ def get_public_ip() -> str:
 
 _raw_main_admin_ids = os.getenv('MAIN_ADMIN_ID', '1405866008127864852')
 MAIN_ADMIN_IDS_ENV = [uid.strip() for uid in _raw_main_admin_ids.split(',') if uid.strip()]
-MAIN_ADMIN_ID = int(MAIN_ADMIN_IDS_ENV[0])  # kept for backward-compat display purposes
+MAIN_ADMIN_ID = int(MAIN_ADMIN_IDS_ENV[0]) if MAIN_ADMIN_IDS_ENV else 0  # kept for backward-compat display purposes
 VPS_USER_ROLE_ID = int(os.getenv('VPS_USER_ROLE_ID', '1210291131301101618'))
 DEFAULT_STORAGE_POOL = os.getenv('DEFAULT_STORAGE_POOL', 'default')
 BOT_VERSION = os.getenv('BOT_VERSION', '9.0-PRO')
@@ -182,7 +182,7 @@ def get_nodes() -> List[Dict]:
     conn.close()
     nodes = [dict(row) for row in rows]
     for node in nodes:
-        node['tags'] = json.loads(node['tags'])
+        node['tags'] = json.loads(node['tags']) if node.get('tags') else []
     return nodes
 
 def get_node(node_id: int) -> Optional[Dict]:
@@ -193,7 +193,7 @@ def get_node(node_id: int) -> Optional[Dict]:
     conn.close()
     if row:
         node = dict(row)
-        node['tags'] = json.loads(node['tags'])
+        node['tags'] = json.loads(node['tags']) if node.get('tags') else []
         return node
     return None
 
@@ -217,8 +217,8 @@ def get_vps_data() -> Dict[str, List[Dict[str, Any]]]:
         if user_id not in data:
             data[user_id] = []
         vps = dict(row)
-        vps['shared_with'] = json.loads(vps['shared_with'])
-        vps['suspension_history'] = json.loads(vps['suspension_history'])
+        vps['shared_with'] = json.loads(vps['shared_with']) if vps.get('shared_with') else []
+        vps['suspension_history'] = json.loads(vps['suspension_history']) if vps.get('suspension_history') else []
         vps['suspended'] = bool(vps['suspended'])
         vps['whitelisted'] = bool(vps['whitelisted'])
         vps['os_version'] = vps.get('os_version', 'ubuntu:22.04')
@@ -256,9 +256,9 @@ def save_vps_data():
     cur = conn.cursor()
     for user_id, vps_list in vps_data.items():
         for vps in vps_list:
-            shared_json = json.dumps(vps['shared_with'])
-            history_json = json.dumps(vps['suspension_history'])
-            suspended_int = 1 if vps['suspended'] else 0
+            shared_json = json.dumps(vps.get('shared_with', []))
+            history_json = json.dumps(vps.get('suspension_history', []))
+            suspended_int = 1 if vps.get('suspended', False) else 0
             whitelisted_int = 1 if vps.get('whitelisted', False) else 0
             os_ver = vps.get('os_version', 'ubuntu:22.04')
             created_at = vps.get('created_at', datetime.now().isoformat())
@@ -315,7 +315,7 @@ def allocate_ports(user_id: str, amount: int):
 def deallocate_ports(user_id: str, amount: int):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('UPDATE port_allocations SET allocated_ports = GREATEST(0, allocated_ports - ?) WHERE user_id = ?', (amount, user_id))
+    cur.execute('UPDATE port_allocations SET allocated_ports = MAX(0, allocated_ports - ?) WHERE user_id = ?', (amount, user_id))
     conn.commit()
     conn.close()
 
@@ -425,7 +425,7 @@ intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix=PREFIX, intents=intents, help_command=None)
 
-# Resource monitoring settings (logging only)
+# Resource monitoring settings
 resource_monitor_active = True
 
 # Helper function to truncate text
@@ -443,9 +443,7 @@ def create_embed(title, description="", color=0x1a1a1a):
         description=truncate_text(description, 4096),
         color=color
     )
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1551851022459346995/1551854053431181342/file_0000000012e482089bbcb6baf6541790.png?ex=6ab37c36&is=6ab22ab6&hm=befd08e6f0d32dc78d13de9f687071e0baafc9fe46c449b9dea196dc5a2214d2&")
-    embed.set_footer(text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                     icon_url="https://cdn.discordapp.com/attachments/1551851022459346995/1551854054181707846/file_00000000d0208211a03e73df9a707fcb.png?ex=6ab37c36&is=6ab22ab6&hm=b1008fc48b2f4a57e89cdab46d804fcc53f53296e5a3f3401b94b5fff5ca0373&")
+    embed.set_footer(text=f"{BOT_NAME} VPS Manager v{BOT_VERSION} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     return embed
 
 def add_field(embed, name, value, inline=False):
@@ -547,7 +545,7 @@ async def execute_lxc(container_name: str, command: str, timeout=120, node_id: O
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Remote LXC error on node {node['name']} ({url}): {str(e)}")
-            if hasattr(e.response, 'status_code'):
+            if hasattr(e, 'response') and e.response is not None:
                 raise Exception(f"Remote execution failed on {node['name']}: HTTP {e.response.status_code} - {str(e)}")
             else:
                 raise Exception(f"Remote execution failed on {node['name']}: {str(e)}")
@@ -575,20 +573,17 @@ async def apply_lxc_config(container_name: str, node_id: int):
             await execute_lxc(container_name, f"config device add {container_name} fuse unix-char path=/dev/fuse", node_id=node_id)
         except:
             pass
-        raw_lxc_config = (
-            "lxc.apparmor.profile = unconfined\n"
-            "lxc.apparmor.allow_nesting = 1\n"
-            "lxc.apparmor.allow_incomplete = 1\n"
-            "\n"
-            "lxc.cap.drop =\n"
-            "lxc.cgroup.devices.allow = a\n"
-            "lxc.cgroup2.devices.allow = a\n"
-            "\n"
-            "lxc.mount.auto = proc:rw sys:rw cgroup:rw shmounts:rw\n"
-            "\n"
-            "lxc.mount.entry = /dev/fuse dev/fuse none bind,create=file 0 0\n"
-        )
-        await execute_lxc(container_name, f"config set {container_name} raw.lxc '{raw_lxc_config}'", node_id=node_id)
+        
+        lxc_configs = [
+            "lxc.apparmor.profile = unconfined",
+            "lxc.apparmor.allow_nesting = 1",
+            "lxc.cap.drop =",
+            "lxc.cgroup.devices.allow = a",
+            "lxc.mount.auto = proc:rw sys:rw cgroup:rw"
+        ]
+        for cfg in lxc_configs:
+            await execute_lxc(container_name, f"config set {container_name} raw.lxc \"{cfg}\"", node_id=node_id)
+            
         logger.info(f"LXC permissions applied to {container_name} on node {node_id}")
     except Exception as e:
         logger.error(f"Failed to apply LXC config to {container_name}: {e}")
@@ -615,13 +610,10 @@ async def apply_internal_permissions(container_name: str, node_id: int):
         logger.error(f"Failed to apply internal permissions to {container_name}: {e}")
 
 def generate_password(length: int = 16) -> str:
-    """Generate a random alnum-only password (safe to embed in shell commands)."""
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 async def setup_ssh_access(container_name: str, node_id: int) -> str:
-    """Installs openssh-server, sets a random root password, and enables
-    password-based root SSH login inside the container. Returns the password."""
     password = generate_password()
     commands = [
         "DEBIAN_FRONTEND=noninteractive apt-get update -y",
@@ -639,13 +631,9 @@ async def setup_ssh_access(container_name: str, node_id: int) -> str:
             logger.warning(f"SSH setup command failed in {container_name}: {cmd} - {cmd_error}")
     return password
 
-# ---------------------------------------------------------------------------
-# Pinggy.io SSH tunnel system (replaces local port-forwarding for VPS SSH)
-# ---------------------------------------------------------------------------
 PINGGY_LOG_PATH = "/root/.pinggy_tunnel.log"
 
 def parse_pinggy_address(log_text: str) -> Optional[str]:
-    """Extracts host:port from Pinggy's tcp:// forwarding line, stripping the tcp:// prefix."""
     if not log_text:
         return None
     match = re.search(r'tcp://([\w\.\-]+):(\d+)', log_text, re.IGNORECASE)
@@ -654,7 +642,6 @@ def parse_pinggy_address(log_text: str) -> Optional[str]:
     return None
 
 async def establish_pinggy_tunnel(container_name: str, node_id: int, retries: int = 4, wait_seconds: int = 5) -> Optional[str]:
-    """Runs pinggy tunnel in background and retrieves temporary URL."""
     try:
         await execute_lxc(
             container_name,
@@ -1655,7 +1642,7 @@ class ManageView(discord.ui.View):
                 await execute_lxc(container_name, f"exec {container_name} -- tmate -S /tmp/{session_name}.sock new-session -d", node_id=node_id)
                 await asyncio.sleep(3)
                 ssh_output = await execute_lxc(container_name, f"exec {container_name} -- tmate -S /tmp/{session_name}.sock display -p '#{{tmate_ssh}}'", node_id=node_id)
-                ssh_url = ssh_output.strip()
+                ssh_url = ssh_output.strip() if isinstance(ssh_output, str) else ""
                 if ssh_url:
                     try:
                         ssh_embed = create_embed("🔑 SSH Access", f"SSH connection for VPS `{container_name}`:", 0x00ff88)
