@@ -1,10 +1,10 @@
 #!/bin/bash
 # ============================================================
-#  Evil Vps V1 — Installer
+#  DBGAMING Vps V2 — Installer (Updated Version)
 #  Sets up LXD/LXC, Python deps, systemd service for bot.py
 # ============================================================
 
-set -e
+set -euo pipefail
 
 # ---------- Colors ----------
 RED='\033[0;31m'; GRN='\033[0;32m'; YEL='\033[1;33m'; BLU='\033[0;34m'
@@ -23,20 +23,18 @@ rainbow_line() {
 }
 
 ascii_banner() {
-    rainbow_line ' #####  #   #  #      #       #####    ###     ###   ##### '
-    rainbow_line ' #      #   #  #      #      #       #   #   #   #  # '
-    rainbow_line ' ####   #   #  #      #      ###    #####   #####  #### '
-    rainbow_line ' #       # #   #      #          #   #   #   #   #  # '
-    rainbow_line ' #####    #    #      #####   ####    #   #   #   #  ##### '
-    rainbow_line '##    ##   ## ##   ##     ##      ## ##   ##        ##    ##      ## ##   ##     ## '
-    rainbow_line '    '
+    rainbow_line ' ###   #####   ###   ###  #   # _____ #  _  '
+    rainbow_line ' #  #  #   #  #   # #   # ## ##   #   ## #  '
+    rainbow_line ' #  #  #####  #   # ##### # # #   #   # ##  '
+    rainbow_line ' #  #  #   #  # _ # #   # #   #   #   #  #  '
+    rainbow_line ' ###   #####   ###  #   # #   # _____ #  #  '
     echo ""
     rainbow_line ' ___  ___ _____   _   __  _____   ___ ___ ___ _____ ___ ___  _  _ '
     rainbow_line '| _ )/ _ \_   _| | |  \ \/ / __| | __|   \_ _|_   _|_ _/ _ \| \| |'
     rainbow_line '| _ \ (_) || |   | |__ >  < (__  | _|| |) | |  | |  | | (_) | .` |'
     rainbow_line '|___/\___/ |_|   |____/_/\_\___| |___|___/___| |_| |___\___/|_|\_|'
     echo ""
-    rainbow_line '                    ~ Made by EvilSaad ~'
+    rainbow_line '                    ~ Made by DBGAMING ~'
     echo ""
 }
 
@@ -61,7 +59,6 @@ need_root() {
     fi
 }
 
-# ---------- OS selection ----------
 choose_os() {
     echo -e "${WHT}Select your OS:${NC}"
     echo -e "  ${YEL}1)${NC} Ubuntu"
@@ -70,58 +67,60 @@ choose_os() {
 }
 
 install_lxd_ubuntu() {
-    step "Updating system (Ubuntu)..."
+    step "Updating system packages (Ubuntu)..."
     apt update && apt upgrade -y
 
-    step "Installing LXC utilities..."
-    apt install lxc lxc-utils -y
+    step "Installing LXC, snapd, and network dependencies..."
+    apt install -y lxc lxc-utils snapd bridge-utils uidmap
 
-    step "Installing snapd..."
-    apt install snapd -y
+    step "Enabling snapd..."
     systemctl enable --now snapd.socket
 
     step "Installing LXD via snap..."
-    snap install lxd
+    snap install lxd || snap refresh lxd
 
-    step "Adding $SUDO_USER to lxd group..."
-    usermod -aG lxd "${SUDO_USER:-$USER}" || true
+    step "Configuring lxd permissions..."
+    if [ -n "${SUDO_USER:-}" ]; then
+        usermod -aG lxd "$SUDO_USER" || true
+    fi
 
-    step "Initializing LXD (auto/minimal config)..."
-    lxd init --auto
-
-    step "Installing bridge/uidmap utilities..."
-    apt update
-    apt install lxc lxc-utils bridge-utils uidmap -y
+    step "Initializing LXD..."
+    lxd init --auto || warn "LXD already initialized or failed auto-init."
 }
 
 install_lxd_debian() {
-    step "Updating system (Debian)..."
+    step "Updating system packages (Debian)..."
     apt update && apt upgrade -y
 
     step "Installing snapd..."
-    apt install snapd -y
+    apt install -y snapd
     systemctl enable --now snapd.socket
 
     step "Linking snap directory..."
     ln -sf /var/lib/snapd/snap /snap
 
     step "Installing LXD via snap..."
-    snap install lxd
+    snap install lxd || snap refresh lxd
 
-    step "Adding $SUDO_USER to lxd group..."
-    usermod -aG lxd "${SUDO_USER:-$USER}" || true
+    step "Configuring lxd permissions..."
+    if [ -n "${SUDO_USER:-}" ]; then
+        usermod -aG lxd "$SUDO_USER" || true
+    fi
 
-    step "Initializing LXD (auto/minimal config)..."
-    lxd init --auto
+    step "Initializing LXD..."
+    lxd init --auto || warn "LXD already initialized or failed auto-init."
 }
 
 install_python_stack() {
-    step "Installing Python 3 / pip..."
-    apt install python3-pip -y
+    step "Installing Python 3 and pip..."
+    apt install -y python3-pip python3-full
 
-    step "Allowing pip to break system packages (PEP 668 override)..."
-    mkdir -p ~/.config/pip
-    echo -e "[global]\nbreak-system-packages = true" > ~/.config/pip/pip.conf
+    step "Configuring pip (PEP 668 override)..."
+    mkdir -p /root/.config/pip
+    cat > /root/.config/pip/pip.conf <<EOF
+[global]
+break-system-packages = true
+EOF
 
     step "Installing Python dependencies (discord.py, requests)..."
     pip3 install -U discord.py requests
@@ -174,11 +173,8 @@ EOF
     step "Reloading systemd daemon..."
     systemctl daemon-reload
 
-    step "Starting bot service..."
-    systemctl restart bot
-
-    step "Enabling bot service on boot..."
-    systemctl enable bot
+    step "Enabling and starting bot service..."
+    systemctl enable --now bot
 }
 
 final_message() {
