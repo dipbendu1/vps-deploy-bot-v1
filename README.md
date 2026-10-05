@@ -1,4 +1,4 @@
-# DB Vps V1 Bot — LXC Edition
+# DB Vps V2 Bot — LXC Edition
 Made by **DB GAMING** Repo: https://github.com/dipbendu1/vps-deploy-bot-v1.git
 
 Fully automated Discord bot for managing LXC/LXD-based VPS containers — creation, resizing, suspension, port forwarding, multi-node support, and admin controls, all from Discord.
